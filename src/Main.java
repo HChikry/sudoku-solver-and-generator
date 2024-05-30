@@ -4,6 +4,8 @@ import sudoku.PuzzleOrder;
 import sudoku.Sudoku;
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.Scanner;
 
 public class Main {
@@ -56,6 +58,15 @@ public class Main {
     private static void generationMenu() {
         logoPrinter();
         System.out.println("\t-------------------------------------------------");
+        System.out.println("\t|                     Message                    |");
+        System.out.println("\t-------------------------------------------------");
+        System.out.println("\t|    How Many Squares You Want to fill?          |");
+        System.out.println("\t|         ( min = 1  and   max = 80)             |");
+        System.out.println("\t-------------------------------------------------\n");
+        int numberOfSquaresToFill = intInput(1, 80);
+
+        logoPrinter();
+        System.out.println("\t-------------------------------------------------");
         System.out.println("\t|                     Menu                      |");
         System.out.println("\t-------------------------------------------------");
         System.out.println("\t|    1. Print the Generated Sudoku.             |");
@@ -65,14 +76,14 @@ public class Main {
         System.out.println("\t-------------------------------------------------\n");
 
         int choice = intInput(1, 4);
-        int[][] generatedPuzzle = Sudoku.generate();
+        int[][] generatedPuzzle = Sudoku.generate(numberOfSquaresToFill);
         String filePath;
 
         switch (choice) {
             case 1:
                 while (true) {
                     try { Sudoku.print(generatedPuzzle); }
-                    catch (OutOfGridException e) { continue; }
+                    catch (OutOfGridException | EmptyPuzzleException e) { continue; }
                     break;
                 }
                 break;
@@ -92,7 +103,7 @@ public class Main {
                     try {
                         Sudoku.print(generatedPuzzle);
                         Sudoku.saveToFile(generatedPuzzle, filePath);
-                    } catch (OutOfGridException | IOException e) {
+                    } catch (OutOfGridException | EmptyPuzzleException | IOException e) {
                         continue;
                     }
                     break;
@@ -105,7 +116,7 @@ public class Main {
     }
 
     private static void solutionMenu() {
-        Sudoku game;
+        Sudoku game = null;
 
         while (true) {
             logoPrinter();
@@ -128,7 +139,11 @@ public class Main {
 
                     case 2:
                         String filepath = getFilePath();
-                        game = new Sudoku(filepath, PuzzleOrder.ROWS);
+                        try {
+                            game = new Sudoku(filepath, PuzzleOrder.ROWS);
+                        } catch (IOException e) {
+                            System.out.println(e.getMessage() + "\n\n");
+                        }
                         break;
 
                     default:
@@ -149,6 +164,7 @@ public class Main {
             break;
         }
 
+        assert game != null;
         if (game.solve()) {
             System.out.println("\n\t-------------------------------------------------");
             System.out.println("\t|                    Message                    |");

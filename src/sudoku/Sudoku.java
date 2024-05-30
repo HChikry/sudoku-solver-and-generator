@@ -1,14 +1,11 @@
 package sudoku;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.io.*;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
 public class Sudoku {
     private String filePath;
-    private String[] puzzle;
     private final int[][] board;
     private int[][] solvedBoard;
     public static final int GRID_SIZE = 9;
@@ -43,7 +40,6 @@ public class Sudoku {
             }
         }
 
-        this.puzzle = puzzle;
         if (order == PuzzleOrder.ROWS) {
             this.board = parseRows(puzzle);
         } else {
@@ -51,9 +47,15 @@ public class Sudoku {
         }
     }
 
-    public Sudoku(String filePath, PuzzleOrder order) throws OutOfGridException, EmptyPuzzleException, NumberFormatException {
+    public Sudoku(String filePath, PuzzleOrder order) throws OutOfGridException, EmptyPuzzleException, NumberFormatException, IOException {
         this.filePath = filePath;
-        String[] puzzle = getPuzzleFromFile();
+        String[] puzzle;
+
+        try {
+            puzzle = getPuzzleFromFile();
+        } catch (IOException e) {
+            throw e;
+        }
 
         if (puzzle.length != 9) {
             throw new OutOfGridException();
@@ -65,7 +67,6 @@ public class Sudoku {
             }
         }
 
-        this.puzzle = puzzle;
         if (order == PuzzleOrder.ROWS) {
             this.board = parseRows(puzzle);
         } else {
@@ -99,9 +100,9 @@ public class Sudoku {
         return sudokuBoard;
     }
 
-    private String[] getPuzzleFromFile() {
+    private String[] getPuzzleFromFile() throws IOException {
         String[] puzzle = new String[9];
-        String buffer = "";
+        String buffer;
 
         try {
             BufferedReader reader = new BufferedReader(new FileReader(this.filePath));
@@ -112,7 +113,7 @@ public class Sudoku {
             }
             reader.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw e;
         }
 
         return puzzle;
@@ -155,93 +156,89 @@ public class Sudoku {
         if (currentRow == GRID_SIZE) return true;
 
         for (int r = currentRow; r < GRID_SIZE; ++r) {
-            for (int c = 0; c < GRID_SIZE; ++c) {
+            for (int c = currentColumn; c < GRID_SIZE; ++c) {
                 if (game[r][c] != 0) continue;
 
                 for (int n = 1; n < 10; ++n) {
                     if (!isNumberValid(game, n, r, c)) continue;
 
                     game[r][c] = n;
-                    if (solver(game, r, c)) return true;
+                    if (solver(game, r, c+1)) return true;
                     game[r][c] = 0;
                 }
 
                 return false;
             }
+            currentColumn = 0;
         }
 
         return true;
     }
 
-    public static int[][] generate() {
-        SecureRandom secureRandom = new SecureRandom();
-        int deletedNumber = 0;
-        boolean isNumberValid = true;
-
-        int r, c, n;
+    public static int[][] generate(int numberOfSquaresToFill) {
         int[][] game = new int[GRID_SIZE][GRID_SIZE];
-        int[] possibleNumbers = {1, 2, 3, 4, 5, 6, 7, 8 , 9};
+        creator(game, 0, 0);
 
-        int tries = 1;
-        do {
-            deletedNumber = secureRandom.nextInt(9) + 1;
-            for (int i = 0; i < GRID_SIZE; ++i) {
-                Arrays.fill(game[i], 0);
-            }
-
-            System.out.println(tries + " Puzzels Have Been Generated");
-            tries++;
-
-            for (int i = 0; i < 27; ++i) {
-                for (int j = 0; j < GRID_SIZE; j++) {
-                    possibleNumbers[j] = j + 1;
-                    if (j + 1 == deletedNumber) possibleNumbers[j] = 0;
-                }
-
-                do {
-                    r = secureRandom.nextInt(9);
-                    c = secureRandom.nextInt(9);
-                } while (game[r][c] != 0);
-
-                int numberCount = 0;
-                do {
-                    do {
-                        n = secureRandom.nextInt(9) + 1;
-                    } while (possibleNumbers[n-1] == 0);
-                    possibleNumbers[n-1] = 0;
-
-                    if (++numberCount == 8) {
-                        isNumberValid = false;
-                        break;
-                    }
-                } while (!isNumberValid(game, n, r, c));
-
-                if (isNumberValid) {
-                    game[r][c] = n;
-                } else {
-                    isNumberValid = true;
-                    i--;
-                }
-            } // end for-loop (generating the puzzle)
-
-            try {
-                if (Sudoku.solve(game) != null) break;
-            } catch (OutOfGridException | EmptyPuzzleException e) {
-                // do nothing
-            }
-        } while (true);
+        SecureRandom secureRandom = new SecureRandom();
+        int r = 0, c = 0;
+        for (int i = 0; i < 81 - numberOfSquaresToFill; ++i) {
+            do {
+                r = secureRandom.nextInt(9);
+                c = secureRandom.nextInt(9);
+            } while (game[r][c] == 0);
+            game[r][c] = 0;
+        }
 
         return game;
     }
 
+   private static boolean creator(int[][] game, int currentRow, int currentColumn) {
+       if (currentRow == GRID_SIZE) return true;
+
+       SecureRandom secureRandom = new SecureRandom();
+       int[] possibleNumbers = new int[GRID_SIZE];
+       for (int i = 0; i < GRID_SIZE; i++) {
+           possibleNumbers[i] = i + 1;
+       }
+
+       int n;
+       for (int r = currentRow; r < GRID_SIZE; ++r) {
+           for (int c = currentColumn; c < GRID_SIZE; ++c) {
+               if (game[r][c] != 0) continue;
+
+               // finding the number
+               for (int i = 0; i < GRID_SIZE; ++i) {
+                   // selecting a possible number
+                   do {
+                       n = secureRandom.nextInt(9) + 1;
+                   } while (possibleNumbers[n-1] == 0);
+
+                   possibleNumbers[n-1] = 0; // making that number not possible anymore
+                   if (!isNumberValid(game, n, r, c)) continue;
+
+                   game[r][c] = n;
+                   if (creator(game, r, c+1)) return true;
+                   game[r][c] = 0;
+               }
+
+               return false;
+           }
+           currentColumn = 0;
+       }
+
+       return true;
+   }
+
     private static boolean isNumberValid(int[][] board, int number, int numberRow, int numberColumn) {
         // searching  in each column of the same square's row
         for (int i = 0; i < GRID_SIZE; ++i) {
+            if (i == numberColumn) continue;
             if (board[numberRow][i] == number) return false;
         }
 
         // searching in each row of the same square's column
         for (int i = 0; i < GRID_SIZE; ++i) {
+            if (i == numberRow) continue;
             if (board[i][numberColumn] == number) return false;
         }
 
@@ -257,6 +254,7 @@ public class Sudoku {
 
         for (int i = startingRowIndex; i < startingRowIndex + 3; ++i) {
             for (int j = startingColumnIndex; j < startingColumnIndex + 3; ++j) {
+                if (i == numberRow && j == numberColumn) continue;
                 if (board[i][j] == number) return false;
             }
         }
@@ -304,10 +302,10 @@ public class Sudoku {
         System.out.println("\t-------------------------");
     }
 
-    public static void print(int[][] game) throws OutOfGridException {
-        if (game.length != 9) {
-            throw new OutOfGridException();
-        }
+    public static void print(int[][] game) throws OutOfGridException, EmptyPuzzleException {
+        if (game == null) throw new EmptyPuzzleException();
+        if (game.length != 9) throw new OutOfGridException();
+
         System.out.println();
 
         for (int i = 0; i < GRID_SIZE; ++i) {
@@ -349,7 +347,7 @@ public class Sudoku {
         saveToFile(this.solvedBoard, filePath);
     }
 
-    public static void generateToFile(String filePath) throws IOException {
-        saveToFile(Sudoku.generate(), filePath);
+    public static void generateToFile(String filePath, int numberOfSquaresToFill) throws IOException {
+        saveToFile(Sudoku.generate(numberOfSquaresToFill), filePath);
     }
 }
