@@ -12,6 +12,9 @@ public class Main {
     public static void main(String[] args) {
         mainMenu();
         endMessagePrinter();
+        // add solvable checker (public static)
+        // add if solution is correct checker (public static)
+        // make isNumberValid a public static function
     }
 
     private static void endMessagePrinter() {
