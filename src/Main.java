@@ -7,14 +7,12 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.Scanner;
+import java.util.logging.SocketHandler;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws OutOfGridException, EmptyPuzzleException {
         mainMenu();
         endMessagePrinter();
-        // add solvable checker (public static)
-        // add if solution is correct checker (public static)
-        // make isNumberValid a public static function
     }
 
     private static void endMessagePrinter() {

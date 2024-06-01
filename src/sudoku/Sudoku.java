@@ -19,6 +19,7 @@ public class Sudoku {
             for (int j = 0; j < GRID_SIZE; ++j) {
                 if (board[i][j] != 0) {
                     areAllValuesEmpty = false;
+                    break;
                 }
             }
         }
@@ -72,6 +73,18 @@ public class Sudoku {
         } else {
             this.board = parseColumns(puzzle);
         }
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public int[][] getBoard() {
+        return board;
+    }
+
+    public int[][] solvedBoard() {
+        return solvedBoard;
     }
 
     public static int[][] parseRows(String[] puzzleRows) throws NumberFormatException {
@@ -229,7 +242,7 @@ public class Sudoku {
        return true;
    }
 
-    private static boolean isNumberValid(int[][] board, int number, int numberRow, int numberColumn) {
+    public static boolean isNumberValid(int[][] board, int number, int numberRow, int numberColumn) {
         // searching  in each column of the same square's row
         for (int i = 0; i < GRID_SIZE; ++i) {
             if (i == numberColumn) continue;
@@ -349,5 +362,32 @@ public class Sudoku {
 
     public static void generateToFile(String filePath, int numberOfSquaresToFill) throws IOException {
         saveToFile(Sudoku.generate(numberOfSquaresToFill), filePath);
+    }
+
+    public static boolean isSolvable(int[][] game) {
+        return solver(game, 0, 0);
+    }
+
+    public static boolean isSolutionCorrect(int[][] initialBoard, int[][] solution) throws OutOfGridException, EmptyPuzzleException {
+        if (initialBoard.length != 9 || solution.length != 9) {
+            throw new OutOfGridException();
+        }
+
+        boolean areAllValuesEmpty = true;
+        for (int i = 0; i < GRID_SIZE; ++i) {
+            for (int j = 0; j < GRID_SIZE; ++j) {
+                if (initialBoard[i][j] != 0 || solution[i][j] != 0) {
+                    areAllValuesEmpty = false;
+                }
+
+                if (solution[i][j] == 0) return false;
+                if (!isNumberValid(solution, solution[i][j], i, j)) return false;
+                if (initialBoard[i][j] == 0) continue;
+                if (initialBoard[i][j] != solution[i][j]) return false;
+            }
+        }
+        if (areAllValuesEmpty) throw new EmptyPuzzleException();
+
+        return true;
     }
 }
