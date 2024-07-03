@@ -8,6 +8,7 @@ public class Sudoku {
     private String filePath;
     private final int[][] board;
     private int[][] solvedBoard;
+    private boolean isSolveMethodCalled = false;
     public static final int GRID_SIZE = 9;
 
     public Sudoku(int[][] board) throws OutOfGridException, EmptyPuzzleException {
@@ -75,16 +76,21 @@ public class Sudoku {
         }
     }
 
-    public String getFilePath() {
-        return filePath;
-    }
-
     public int[][] getBoard() {
-        return board;
+        return this.board;
     }
 
-    public int[][] solvedBoard() {
-        return solvedBoard;
+    public int[][] getSolvedBoard() {
+        if (isSolveMethodCalled) {
+            return this.solvedBoard;
+        }
+
+        if (this.solve()) {
+            this.isSolveMethodCalled = true;
+            return this.solvedBoard;
+        }
+
+        return new int[GRID_SIZE][GRID_SIZE];
     }
 
     public static int[][] parseRows(String[] puzzleRows) throws NumberFormatException {
@@ -139,7 +145,12 @@ public class Sudoku {
             this.solvedBoard[i] = Arrays.copyOf(this.board[i], this.board[i].length);
         }
 
-        return solver(this.solvedBoard, 0, 0);
+        if (solver(this.solvedBoard, 0, 0)) {
+            this.isSolveMethodCalled = true;
+            return true;
+        }
+
+        return false;
     }
 
     public static int[][] solve(int[][] game) throws OutOfGridException, EmptyPuzzleException {

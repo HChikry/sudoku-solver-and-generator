@@ -1,18 +1,13 @@
-import sudoku.EmptyPuzzleException;
-import sudoku.OutOfGridException;
-import sudoku.PuzzleOrder;
-import sudoku.Sudoku;
+import sudoku.*;
+
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
 import java.util.Scanner;
-import java.util.logging.SocketHandler;
 
 public class Main {
     public static void main(String[] args) throws OutOfGridException, EmptyPuzzleException {
-        mainMenu();
-        endMessagePrinter();
+//        mainMenu();
+//        endMessagePrinter();
     }
 
     private static void endMessagePrinter() {
@@ -22,6 +17,7 @@ public class Main {
         System.out.println("\t|         Have a Good Day, Goodbye :)           |");
         System.out.println("\t-------------------------------------------------\n");
     }
+
     private static void logoPrinter() {
         System.out.println("\n\t\t    ==================================");
         System.out.println("\t\t    |    Welcome to Sudoku Solver    |");
